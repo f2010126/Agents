@@ -1,7 +1,7 @@
 # Actual Agent
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.agents import create_react_agent, AgentExecutor
+from langchain_classic.agents import create_react_agent, AgentExecutor
 from langchain_core.tools import Tool
 
 from app.config import logger

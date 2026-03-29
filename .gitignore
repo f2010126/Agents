@@ -1,2 +1,5 @@
 multi_tool_agent/__pycache__
 streaming_agent/app/google_search_agent/__pycache__
+first_agent/my_agent/__pycache__
+*/__pycache__
+*/*/__pycache__
