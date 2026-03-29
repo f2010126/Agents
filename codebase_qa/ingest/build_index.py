@@ -2,21 +2,34 @@ from langchain_community.document_loaders import DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-loader = DirectoryLoader("../data", glob="**/*.py")
-docs = loader.load()
+try:
+    loader = DirectoryLoader("../data", glob="**/*.py")
+    docs = loader.load()
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,
-    chunk_overlap=100
-)
+    logger.info(f"Loaded {len(docs)} documents")
 
-chunks = splitter.split_documents(docs)
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=800,
+        chunk_overlap=100
+    )
 
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/embedding-001"
-)
+    chunks = splitter.split_documents(docs)
+    logger.info(f"Split into {len(chunks)} chunks")
 
-db = FAISS.from_documents(chunks, embeddings)
-db.save_local("../vectorstore")
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/embedding-001"
+    )
+
+    db = FAISS.from_documents(chunks, embeddings)
+    db.save_local("../vectorstore")
+
+    logger.info("Vectorstore built and saved successfully")
+
+except Exception as e:
+    logger.error(f"Indexing failed: {e}")
