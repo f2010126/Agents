@@ -1,0 +1,4 @@
+# EU-AI Chatbot
+
+##### References
+https://developers.llamaindex.ai/python/examples/low_level/oss_ingestion_retrieval/

@@ -1,0 +1,145 @@
+from llama_index.llms.gemini import Gemini
+from llama_index.embeddings.gemini import GeminiEmbedding
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
+from llama_index.core.query_engine import RetrieverQueryEngine
+import os
+from pathlib import Path
+
+from llama_index.core import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    StorageContext,
+    load_index_from_storage,
+    Settings,
+)
+
+# add your GOOGLE API key here
+MODEL = "models/gemini-2.5-flash"
+
+PERSIST_DIR = "./storage"
+BASE_DIR = Path(__file__).resolve().parent
+DOCS_DIR = BASE_DIR / "oss" / "docs"
+
+Settings.llm = Gemini(
+    model_name=MODEL,
+    api_key=GOOGLE_API_KEY
+)
+
+Settings.embed_model = GeminiEmbedding(
+    model_name="gemini-embedding-001",
+    api_key=GOOGLE_API_KEY
+)
+
+
+def load_documents():
+
+    eu_docs = SimpleDirectoryReader(
+        DOCS_DIR / "EU_AI_ACT"
+    ).load_data()
+
+    gdpr_docs = SimpleDirectoryReader(
+        DOCS_DIR / "GDPR"
+    ).load_data()
+
+    other_docs = SimpleDirectoryReader(
+        DOCS_DIR / "OTHER_REGULATIONS"
+    ).load_data()
+
+    # attach metadata to set the priority. 1 is top
+    for d in eu_docs:
+        d.metadata["source_type"] = "eu_ai_act"
+        d.metadata["authority_rank"] = 1
+
+    for d in gdpr_docs:
+        d.metadata["source_type"] = "gdpr"
+        d.metadata["authority_rank"] = 2
+
+    for d in other_docs:
+        d.metadata["source_type"] = "other"
+        d.metadata["authority_rank"] = 3
+
+    return eu_docs + gdpr_docs + other_docs
+
+
+def build_index():
+
+    documents = load_documents()
+
+    splitter = SentenceSplitter(
+        chunk_size=1024,
+        chunk_overlap=150
+    )
+
+    index = VectorStoreIndex.from_documents(
+        documents=documents,
+        transformations=[splitter],
+        show_progress=True,
+    )
+
+    index.storage_context.persist(
+        persist_dir=PERSIST_DIR
+    )
+
+    print("Index persisted.")
+
+    return index
+
+
+def load_existing_index():
+
+    storage_context = StorageContext.from_defaults(
+        persist_dir=PERSIST_DIR
+    )
+
+    index = load_index_from_storage(
+        storage_context
+    )
+
+    return index
+
+
+def query_index(index):
+    filters = MetadataFilters(
+        filters=[
+            ExactMatchFilter(key="source_type", value="eu_ai_act")
+        ]
+    )
+
+    retriever = index.as_retriever(
+        similarity_top_k=5,
+        filters=filters
+    )
+
+    query_engine = RetrieverQueryEngine.from_args(retriever)
+
+    response = query_engine.query(
+        "What obligations does the EU AI Act impose on providers of high-risk AI systems?"
+    )
+
+    print("\n")
+    print(response)
+    print("\n")
+
+
+def load_all_docs():
+
+    print(BASE_DIR)
+    print(DOCS_DIR)
+    print(DOCS_DIR.exists())
+
+    if not os.path.exists(PERSIST_DIR):
+
+        print("Building new index...")
+        index = build_index()
+
+    else:
+
+        print("Loading existing index...")
+        index = load_existing_index()
+
+    query_index(index)
+
+
+if __name__ == "__main__":
+    load_all_docs()
