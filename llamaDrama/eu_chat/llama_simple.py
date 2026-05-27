@@ -10,9 +10,12 @@ from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
     StorageContext,
+    Document,
     load_index_from_storage,
     Settings,
 )
+from oss.data_cleaning import inspect_raw_documents, clean_text
+from oss.pdf_parsing import parselite_folder, inspect_chunks
 
 # add your GOOGLE API key here
 MODEL = "models/gemini-2.5-flash"
@@ -56,7 +59,25 @@ def load_documents():
     )
 
     all_docs = eu_docs + gdpr_docs + other_docs
-    return all_docs
+
+    cleaned_docs = []
+
+    for d in all_docs:
+
+        text = d.text
+
+        # enforce deterministic string normalization only
+        text = text.replace("\r", " ")
+        text = " ".join(text.split())   # collapses weird spacing
+
+        cleaned_docs.append(
+            Document(
+                text=text,
+                metadata=d.metadata
+            )
+        )
+
+    return cleaned_docs
 
 
 def build_index():
@@ -152,5 +173,18 @@ def load_all_docs():
     query_index(index)
 
 
+def simple_debug():
+    docs = load_documents()
+    inspect_raw_documents(docs)
+
+
+def check_parsing():
+    docs = load_documents()
+    splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=150)
+    inspect_chunks(docs, splitter)
+
+
 if __name__ == "__main__":
-    load_all_docs()
+    # load_all_docs()
+    # simple_debug()
+    check_parsing()

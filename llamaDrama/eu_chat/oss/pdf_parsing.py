@@ -8,7 +8,7 @@ DOCS_DIR = BASE_DIR / "docs"
 
 
 def parselite_folder(folder_path: Path, source_type: str, authority_rank: int, jurisdiction: str):
-    parser = LiteParse()
+    parser = LiteParse(ocr_enabled=False)
 
     docs = []
 
@@ -18,6 +18,11 @@ def parselite_folder(folder_path: Path, source_type: str, authority_rank: int, j
 
         for page in result.pages:
 
+            text = page.text
+            # remove emoty
+            if not text or not text.strip():
+                continue
+
             doc = Document(
                 text=page.text,
                 metadata={
@@ -26,7 +31,7 @@ def parselite_folder(folder_path: Path, source_type: str, authority_rank: int, j
                     "jurisdiction_label": jurisdiction,
                     "document_id": f"{source_type}::{file_path.name}",
                     "file_name": file_path.name,
-                    "page_label": page.page_number
+                    "page_label": page.page_num
                 }
             )
 
@@ -46,6 +51,24 @@ def sampler():
     # Per-page data
     # for page in result.pages:
     #     print(f"Page {page.page_num}: {len(page.text_items)} text items")
+
+
+def inspect_chunks(documents, splitter):
+    nodes = splitter.get_nodes_from_documents(documents)
+
+    lengths = [len(n.text) for n in nodes]
+
+    print("TOTAL CHUNKS:", len(nodes))
+    print("MIN LENGTH:", min(lengths))
+    print("MAX LENGTH:", max(lengths))
+    print("AVG LENGTH:", sum(lengths) / len(lengths))
+
+    print("\nSAMPLE CHUNKS:\n")
+
+    for i, n in enumerate(nodes[:2]):
+        print("=" * 80)
+        print(f"CHUNK {i}")
+        print(n.text[:1200])
 
 
 if __name__ == "__main__":
