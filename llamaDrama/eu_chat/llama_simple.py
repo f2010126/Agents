@@ -27,39 +27,36 @@ Settings.llm = Gemini(
 )
 
 Settings.embed_model = GeminiEmbedding(
-    model_name="gemini-embedding-001",
+    model_name="gemini-embedding-001",  # models/text-embedding-001
     api_key=GOOGLE_API_KEY
 )
 
 
 def load_documents():
 
-    eu_docs = SimpleDirectoryReader(
-        DOCS_DIR / "EU_AI_ACT"
-    ).load_data()
+    eu_docs = parselite_folder(
+        DOCS_DIR / "EU_AI_ACT",
+        source_type="eu_ai_act",
+        authority_rank=1,
+        jurisdiction="EU"
+    )
 
-    gdpr_docs = SimpleDirectoryReader(
-        DOCS_DIR / "GDPR"
-    ).load_data()
+    gdpr_docs = parselite_folder(
+        DOCS_DIR / "GDPR",
+        source_type="gdpr",
+        authority_rank=2,
+        jurisdiction="EU"
+    )
 
-    other_docs = SimpleDirectoryReader(
-        DOCS_DIR / "OTHER_REGULATIONS"
-    ).load_data()
+    other_docs = parselite_folder(
+        DOCS_DIR / "OTHER_REGULATIONS",
+        source_type="other",
+        authority_rank=3,
+        jurisdiction="GLOBAL"
+    )
 
-    # attach metadata to set the priority. 1 is top
-    for d in eu_docs:
-        d.metadata["source_type"] = "eu_ai_act"
-        d.metadata["authority_rank"] = 1
-
-    for d in gdpr_docs:
-        d.metadata["source_type"] = "gdpr"
-        d.metadata["authority_rank"] = 2
-
-    for d in other_docs:
-        d.metadata["source_type"] = "other"
-        d.metadata["authority_rank"] = 3
-
-    return eu_docs + gdpr_docs + other_docs
+    all_docs = eu_docs + gdpr_docs + other_docs
+    return all_docs
 
 
 def build_index():
@@ -117,9 +114,23 @@ def query_index(index):
         "What obligations does the EU AI Act impose on providers of high-risk AI systems?"
     )
 
-    print("\n")
+    print("\nANSWER:\n")
     print(response)
-    print("\n")
+
+    print("\nSOURCE NODES:\n")
+
+    for node in response.source_nodes:
+
+        print("TEXT:")
+        print(node.node.text[:300])
+
+        print("\nMETADATA:")
+        print(node.node.metadata)
+
+        print("\nSCORE:")
+        print(node.score)
+
+        print("\n" + "=" * 80 + "\n")
 
 
 def load_all_docs():
