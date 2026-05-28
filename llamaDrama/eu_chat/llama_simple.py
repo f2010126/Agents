@@ -34,6 +34,8 @@ Settings.embed_model = GeminiEmbedding(
     api_key=GOOGLE_API_KEY
 )
 
+client = QdrantClient(host="localhost", port=6333)
+
 
 def load_documents():
 
@@ -89,32 +91,43 @@ def build_index():
         chunk_overlap=150
     )
 
+    # index = VectorStoreIndex.from_documents(
+    #     documents=documents,
+    #     transformations=[splitter],
+    #     show_progress=True,
+    # )
+
+    # index.storage_context.persist(
+    #     persist_dir=PERSIST_DIR
+    # )
+
+    vector_store = QdrantVectorStore(
+        client=client, collection_name="eu_ai_chat")
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
     index = VectorStoreIndex.from_documents(
-        documents=documents,
-        transformations=[splitter],
+        documents,
+        storage_context=storage_context,
         show_progress=True,
+        transformations=[splitter],
     )
-
-    index.storage_context.persist(
-        persist_dir=PERSIST_DIR
-    )
-
     print("Index persisted.")
-
     return index
 
 
 def load_existing_index():
 
+    vector_store = QdrantVectorStore(
+        client=client,
+        collection_name="eu_ai_chat",
+    )
+
     storage_context = StorageContext.from_defaults(
-        persist_dir=PERSIST_DIR
+        vector_store=vector_store
     )
 
-    index = load_index_from_storage(
-        storage_context
+    return VectorStoreIndex.from_vector_store(
+        vector_store=vector_store
     )
-
-    return index
 
 
 def query_index(index):
