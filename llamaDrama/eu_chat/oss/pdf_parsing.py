@@ -2,9 +2,24 @@
 from liteparse import LiteParse
 from pathlib import Path
 from llama_index.core import Document
-
+import hashlib
+from llama_index.core.schema import TransformComponent
 BASE_DIR = Path(__file__).resolve().parent
 DOCS_DIR = BASE_DIR / "docs"
+
+
+class StableNodeID(TransformComponent):
+    def __call__(self, nodes, **kwargs):
+        net_nodes = len(nodes)
+        for index, node in enumerate(nodes):
+            source = node.metadata.get("file_name", "unknown")
+
+            raw = source + node.text.strip()
+
+            node.id_ = hashlib.md5(raw.encode()).hexdigest()
+            print(f"Processed {index}/{net_nodes}")
+
+        return nodes
 
 
 def parselite_folder(folder_path: Path, source_type: str, authority_rank: int, jurisdiction: str):
