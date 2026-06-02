@@ -3,8 +3,10 @@ from llama_index.llms.gemini import Gemini
 from llama_index.embeddings.gemini import GeminiEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.vector_stores.qdrant import QdrantVectorStore
+from qdrant_client.models import VectorParams, Distance, PayloadSchemaType
 from llama_index.core import VectorStoreIndex, StorageContext, Document, Settings
-from llama_index.core.ingestion import IngestionPipeline, IngestionCache, TransformComponent
+from llama_index.core.ingestion import IngestionPipeline, IngestionCache
+from llama_index.core.schema import TransformComponent
 from qdrant_client import QdrantClient
 from pathlib import Path
 
@@ -26,6 +28,54 @@ Settings.embed_model = GeminiEmbedding(
 )
 
 client = QdrantClient(host="localhost", port=6333)
+
+# Qdrant Schema
+
+
+def ensure_qdrant_collection():
+    collections = [c.name for c in client.get_collections().collections]
+
+    if COLLECTION not in collections:
+        client.create_collection(
+            collection_name=COLLECTION,
+            vectors_config=VectorParams(
+                size=3072,
+                distance=Distance.COSINE
+            )
+        )
+
+    # Enforce Payload index
+    client.create_payload_index(
+        collection_name=COLLECTION,
+        field_name="jurisdiction_label",
+        field_schema=PayloadSchemaType.KEYWORD,
+    )
+
+    client.create_payload_index(
+        collection_name=COLLECTION,
+        field_name="source_type",
+        field_schema=PayloadSchemaType.KEYWORD,
+    )
+
+    client.create_payload_index(
+        collection_name=COLLECTION,
+        field_name="authority_rank",
+        field_schema=PayloadSchemaType.INTEGER,
+    )
+
+    client.create_payload_index(
+        collection_name=COLLECTION,
+        field_name="document_id",
+        field_schema=PayloadSchemaType.KEYWORD,
+    )
+
+    client.create_payload_index(
+        collection_name=COLLECTION,
+        field_name="page_label",
+        field_schema=PayloadSchemaType.INTEGER,
+    )
+
+# Set Payload Schema
 
 
 class MetadataNormalizer(TransformComponent):
@@ -95,4 +145,5 @@ def build_index():
 
 
 if __name__ == "__main__":
+    ensure_qdrant_collection()
     build_index()
