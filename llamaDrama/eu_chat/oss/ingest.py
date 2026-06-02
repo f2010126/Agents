@@ -4,12 +4,13 @@ from llama_index.embeddings.gemini import GeminiEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core import VectorStoreIndex, StorageContext, Document, Settings
-from llama_index.core.ingestion import IngestionPipeline, IngestionCache
+from llama_index.core.ingestion import IngestionPipeline, IngestionCache, TransformComponent
 from qdrant_client import QdrantClient
 from pathlib import Path
 
 from pdf_parsing import parselite_folder, StableNodeID
 from constants import MODEL, GOOGLE_API_KEY, COLLECTION
+
 
 BASE_DIR = Path(__file__).resolve().parent
 DOCS_DIR = BASE_DIR / "docs"
@@ -25,6 +26,24 @@ Settings.embed_model = GeminiEmbedding(
 )
 
 client = QdrantClient(host="localhost", port=6333)
+
+
+class MetadataNormalizer(TransformComponent):
+    def __call__(self, nodes, **kwargs):
+        for n in nodes:
+            if n.metadata:
+                n.metadata = build_payload(n.metadata)
+        return nodes
+
+
+def build_payload(metadata: dict):
+    return {
+        "source_type": metadata.get("source_type"),
+        "jurisdiction_label": metadata.get("jurisdiction_label"),
+        "authority_rank": metadata.get("authority_rank"),
+        "document_id": metadata.get("document_id"),
+        "page_label": metadata.get("page_label"),
+    }
 
 
 def load_documents():
@@ -45,14 +64,6 @@ def load_documents():
 def build_index():
     documents = load_documents()
 
-    # splitter = SentenceSplitter(
-    #     chunk_size=1024,
-    #     chunk_overlap=150
-    # )
-    # storage_context = StorageContext.from_defaults(
-    #     vector_store=vector_store
-    # )
-
     vector_store = QdrantVectorStore(
         client=client,
         collection_name=COLLECTION,
@@ -64,6 +75,7 @@ def build_index():
                 chunk_size=1024,
                 chunk_overlap=150,
             ),
+            MetadataNormalizer(),
             StableNodeID(),
             Settings.embed_model,
         ],
@@ -72,13 +84,13 @@ def build_index():
 
     # documents -> chunks -> stable ids -> embeddings -> qdrant upsert
     nodes = pipeline.run(documents=documents, show_progress=True)
-    # optional, useful for querying later
+
+    # build query index wrapper
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store
     )
-
-    print(f"Ingestion complete. {len(nodes)} nodes processed.")
-    print("Ingestion complete → Qdrant populated.")
+    print(
+        f"Ingestion complete. {len(nodes)} nodes processed. \n Ingestion complete → Qdrant populated.")
     return index
 
 
