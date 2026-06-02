@@ -93,6 +93,7 @@ def build_payload(metadata: dict):
         "authority_rank": metadata.get("authority_rank"),
         "document_id": metadata.get("document_id"),
         "page_label": metadata.get("page_label"),
+        "file_name": metadata.get("file_name"),  # needed for the tool.
     }
 
 
