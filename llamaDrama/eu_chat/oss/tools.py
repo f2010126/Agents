@@ -12,7 +12,7 @@ client = QdrantClient(host="localhost", port=6333)
 # Available sources
 
 
-def list_available_documents():
+def list_doc_tool():
     """
     List documents by juridiction and name
     """
