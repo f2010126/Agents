@@ -4,11 +4,18 @@
 # 3. Retrieve from vector DB
 from qdrant_client import QdrantClient
 from constants import MODEL, GOOGLE_API_KEY, COLLECTION
-
+from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
+from llama_index.vector_stores.qdrant import QdrantVectorStore
+from llama_index.core import VectorStoreIndex
 client = QdrantClient(host="localhost", port=6333)
+
+# Available sources
 
 
 def list_available_documents():
+    """
+    List documents by juridiction and name
+    """
     scroll_result, _ = client.scroll(
         collection_name=COLLECTION,
         limit=10000,
@@ -36,6 +43,125 @@ def list_available_documents():
             }
 
     return list(seen.values())
+
+# Retrieval
+# add metadata filters based on bias.
+
+
+def build_filters(mode: str):
+    """
+    metadata biasing only. No hard exclusion unless STRICT
+    """
+    # match exact (edge case)
+    if mode == "strict":
+        return MetadataFilters(
+            filters=[
+                ExactMatchFilter(
+                    key="source_type",
+                    value="eu_ai_act"
+                )
+            ]
+        )
+
+    if mode == "focused":
+        # soft bias handled outside Qdrant (No hard filter)
+        return None
+
+    return None  # no metadata filtering here
+
+# actual query to Qdrant
+
+
+def retrieve(query: str, mode: str = "broad", top_k: int = 10):
+    """
+    call to the Qdrant collection
+    """
+
+    vector_store = QdrantVectorStore(
+        client=client,
+        collection_name=COLLECTION,
+        enable_hybrid=True
+    )
+
+    index = VectorStoreIndex.from_vector_store(vector_store)
+    retriever = index.as_retriever(
+        similarity_top_k=top_k,
+        filters=build_filters(mode)
+    )
+
+    nodes = retriever.retrieve(query)
+
+    results = []
+
+    for n in nodes:
+        results.append({
+            "text": n.node.text,
+            "metadata": n.node.metadata,
+            "score": getattr(n, "score", None)
+        })
+
+    return results
+
+# small weighted sorting after retrieval. No reranking as such
+
+
+def rerank_bias(results):
+    """
+    scoring adjustment (not model rerank).
+    """
+
+    def score(item):
+        meta = item["metadata"]
+
+        boost = 0
+
+        if meta.get("source_type") == "eu_ai_act":
+            boost += 0.3
+
+        if meta.get("authority_rank") == 1:
+            boost += 0.2
+
+        return boost
+
+    return sorted(
+        results,
+        key=lambda x: (x.get("score") or 0) + score(x),
+        reverse=True
+    )
+
+# put it together as a tool
+
+
+def retrieval_tool(query: str, mode: str = "broad", top_k: int = 10):
+
+    vector_store = QdrantVectorStore(
+        client=client,
+        collection_name=COLLECTION,
+        enable_hybrid=True
+    )
+
+    index = VectorStoreIndex.from_vector_store(vector_store)
+    retriever = index.as_retriever(
+        similarity_top_k=top_k,
+        filters=build_filters(mode)
+    )
+
+    nodes = retriever.retrieve(query)
+
+    results = [
+        {
+            "text": n.node.text,
+            "metadata": n.node.metadata,
+            "score": getattr(n, "score", None)
+        }
+        for n in nodes
+    ]
+
+    # only focused mode applies biasing
+    if mode == "focused":
+        results = rerank_bias(results)
+
+    return results
 
 
 if __name__ == "__main__":
