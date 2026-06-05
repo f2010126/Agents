@@ -137,5 +137,9 @@ Agent 2 synthesizes the verified statutory metrics, builds the exact obligations
 
 # Data
 The following legal documents are used as the KnowledgeBase:
-- AI EU ACT
-- GDPR
+- AI EU ACT (EU)
+- GDPR (EU)
+- AI RMF Playbook (US)
+- Information technology — Artificial intelligence — Guidance on risk management (EU)
+- Artificial Intelligence Risk Management Framework NIST (US)
+- THE DEVELOPER'S PLAYBOOK for Responsible AI in India (INDIA)
