@@ -3,6 +3,7 @@ from crewai.project import CrewBase, agent, crew, task
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
+from oss.tools import list_doc_tool
 # Dict structures
 
 
@@ -45,6 +46,7 @@ class TriageCrew():
     def intake_triage_specialist(self) -> Agent:
         return Agent(
             config=self.agents_config['intake_triage_specialist'],
+            tools=[list_doc_tool],  # Only access this one
             verbose=True,
             allow_delegation=False
         )
@@ -54,14 +56,14 @@ class TriageCrew():
         return Task(
             config=self.tasks_config['triage_and_strategy_task'],
             agent=self.intake_triage_specialist(),
-            output_json=TriageOutputSchema  # Enforces the exact JSON schema structure
+            output_json=TriageOutputSchema  # enforce schema
         )
 
     @crew
     def crew(self) -> Crew:
         """Creates the isolated Triage Crew"""
         return Crew(
-            agents=self.agents(),  # Automatically gathers agents decorated with @agent
-            tasks=self.tasks(),   # Automatically gathers tasks decorated with @task
-            process=Process.sequential
+            agents=self.agents(),  # get all agents
+            tasks=self.tasks(),   # get all tasks
+            process=Process.sequential  # do i really have a choice?
         )
