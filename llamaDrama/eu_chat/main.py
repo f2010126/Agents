@@ -1,0 +1,187 @@
+# Main file, We have the conditional flow implemented here
+
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional
+import os
+import json
+from typing import List, Optional
+from pydantic import BaseModel, Field
+from crewai.flow.flow import Flow, start, listen, router
+
+from crew_files.crews.eu_specialist_crew.intake_triage_crew import TriageCrew
+from crew_files.crews.legal_expert_crew.compliance_crew import EnforcementCrew
+# What Agent 1 needs send along to Agent 2
+
+
+class AIActComplianceState(BaseModel):
+    # Tracking inputs and iterations
+    user_input: str = ""
+    clarification_attempts: int = 0
+
+    # Storage for Agent 1's structured payload
+    is_sufficiently_narrow: bool = False
+    clarification_question: Optional[str] = None
+    role_extracted: Optional[str] = None
+    jurisdiction_extracted: Optional[str] = None
+    purpose_extracted: Optional[str] = None
+
+    # Audience framing parameters
+    technical_tier: Optional[str] = None
+    organizational_role: Optional[str] = None
+    primary_compliance_focus: Optional[str] = None
+
+    # RAG parameters passed to Agent 2
+    generated_subqueries: List[str] = Field(default_factory=list)
+    agent_1_assumptions: List[str] = Field(default_factory=list)
+
+    # Final Output Storage
+    final_compliance_answer: str = ""
+    discarded_assumptions: List[str] = Field(default_factory=list)
+
+
+class EUAIActComplianceFlow(Flow[AIActComplianceState]):
+    """
+    Implements compliance flow.
+    Keeps Agent 2 offline unless Agent 1 triggers a narrowness confirmation.
+    """
+
+    @start()
+    def run_intake_and_triage(self):
+        """Kicks off the Intake Specialist to parse the user query."""
+        print(
+            f"\n[Flow] Initializing Triage Step. Attempt Count: {self.state.clarification_attempts}")
+
+        # Instantiate and run the isolated Agent 1 Crew
+        triage_crew_instance = TriageCrew().crew()
+        response = triage_crew_instance.kickoff(inputs={
+            "user_input": self.state.user_input,
+            "clarification_attempts": self.state.clarification_attempts
+        })
+
+        # CrewAI populates .raw or parsing can read raw string data
+        try:
+            raw_output = response.raw
+            # Handle standard CrewAI string wrapping if output_json didn't natively parse
+            if isinstance(raw_output, str):
+                # Strip markdown code blocks if the LLM injected them into raw text
+                clean_json = raw_output.replace(
+                    "```json", "").replace("```", "").strip()
+                data = json.loads(clean_json)
+            else:
+                data = raw_output
+
+            # Commit Agent 1 data structures directly to flow state variables
+            self.state.is_sufficiently_narrow = data.get(
+                "is_sufficiently_narrow", False)
+            self.state.clarification_question = data.get(
+                "clarification_question")
+            self.state.role_extracted = data.get("role_extracted")
+            self.state.jurisdiction_extracted = data.get(
+                "jurisdiction_extracted")
+            self.state.purpose_extracted = data.get("purpose_extracted")
+
+            profile = data.get("audience_profile", {}) or {}
+            self.state.technical_tier = profile.get("technical_tier")
+            self.state.organizational_role = profile.get("organizational_role")
+            self.state.primary_compliance_focus = profile.get(
+                "primary_compliance_focus")
+
+            self.state.generated_subqueries = data.get(
+                "generated_subqueries", [])
+            self.state.agent_1_assumptions = data.get(
+                "agent_1_assumptions", [])
+
+        except Exception as e:
+            print(f"[Error] Failed parsing Agent 1 JSON payload: {e}")
+            # Safe defensive fallback: assume un-narrowed text to trigger a safe ask retry
+            self.state.is_sufficiently_narrow = False
+            # This is a safe guard. SO in normal cases the code should NEVER come here
+            self.state.clarification_question = "Could you clarify your user role and AI application intent?"
+
+    @router(run_intake_and_triage)
+    def evaluation_gate(self):
+        """Evaluates the 3 Compliance Pillars and directs the processing route."""
+        if self.state.is_sufficiently_narrow:
+            print("[Router] Query is sufficiently narrow. Moving to Enforcement Step.")
+            return "route_to_enforcer"
+
+        # Check against the Max Cap threshold from your workflow diagram
+        if self.state.clarification_attempts >= 2:
+            print(
+                "[Router] Loop cap breached (attempts >= 2). Forcing Hard Exit Reset.")
+            return "route_to_hard_exit"
+
+        print("[Router] Query is too vague. Moving to Clarification Loop Path.")
+        return "route_to_clarification_loop"
+
+    @listen("route_to_enforcer")
+    def run_compliance_enforcer(self):
+        """Wakes up the optimized Compliance Enforcer to run targeted RAG auditing."""
+        print("[Flow] Initializing Enforcer Step. Launching restricted RAG lookups.")
+
+        # Instantiate and invoke the isolated Agent 2 Crew
+        enforcer_crew_instance = EnforcementCrew().crew()
+        response = enforcer_crew_instance.kickoff(inputs={
+            "generated_subqueries": self.state.generated_subqueries,
+            "agent_1_assumptions": self.state.agent_1_assumptions,
+            "technical_tier": self.state.technical_tier,
+            "organizational_role": self.state.organizational_role,
+            "primary_compliance_focus": self.state.primary_compliance_focus,
+            "role_extracted": self.state.role_extracted,
+            "jurisdiction_extracted": self.state.jurisdiction_extracted,
+            "purpose_extracted": self.state.purpose_extracted
+        })
+
+        try:
+            raw_output = response.raw
+            if isinstance(raw_output, str):
+                clean_json = raw_output.replace(
+                    "```json", "").replace("```", "").strip()
+                data = json.loads(clean_json)
+            else:
+                data = raw_output
+
+            self.state.final_compliance_answer = data.get(
+                "final_compliance_answer", "")
+            self.state.discarded_assumptions = data.get(
+                "discarded_assumptions", [])
+        except Exception as e:
+            print(f"[Error] Failed parsing Agent 2 JSON payload: {e}")
+            self.state.final_compliance_answer = "Error generating finalized legal compliance map."
+
+        print("[Flow] Compliance Roadmap generated successfully. Ending pipeline.")
+        return self.state.final_compliance_answer
+
+    @listen("route_to_clarification_loop")
+    def process_clarification_turn(self):
+        """Increments attempt counters and surfaces follow-up prompts to the UI loop."""
+        self.state.clarification_attempts += 1
+        print(
+            f"[Flow] Surfacing question to UI. New Attempt Counter: {self.state.clarification_attempts}")
+
+        # Assign the question text directly as the execution return value
+        self.state.final_compliance_answer = self.state.clarification_question
+        return self.state.final_compliance_answer
+
+    @listen("route_to_hard_exit")
+    def process_hard_exit(self):
+        """Bypasses downstream nodes to push termination payloads directly to UI."""
+        print("[Flow] Pipeline shut down via Hard Exit execution.")
+
+        # Ensure the error reset string populates the terminal field
+        self.state.final_compliance_answer = self.state.clarification_question
+        return self.state.final_compliance_answer
+
+
+if __name__ == "__main__":
+    # Test Scenario 1: Complex, narrow query (Should bypass clarification directly)
+    initial_prompt = "I am building a free app for a small charity to help homeless people find shelters in France. Does the EU AI Act apply to me, or are non-profits exempt since we aren't selling anything?"
+
+    flow_execution = EUAIActComplianceFlow()
+    flow_execution.state.user_input = initial_prompt
+    flow_execution.state.clarification_attempts = 0
+
+    output_result = flow_execution.kickoff()
+
+    print("\n" + "="*40 + "\nFINAL WORKFLOW OUTPUT:\n" + "="*40)
+    print(output_result)
