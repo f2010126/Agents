@@ -2,6 +2,7 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from crewai_tools import SerperDevTool
 
 from oss.tools import list_doc_tool
 # Dict structures
@@ -46,7 +47,7 @@ class TriageCrew():
     def intake_triage_specialist(self) -> Agent:
         return Agent(
             config=self.agents_config['intake_triage_specialist'],
-            tools=[list_doc_tool],  # Only access this one
+            tools=[list_doc_tool, SerperDevTool()],  # Only access this one
             verbose=True,
             allow_delegation=False
         )

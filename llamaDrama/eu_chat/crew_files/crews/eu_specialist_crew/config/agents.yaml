@@ -16,3 +16,4 @@ intake_triage_specialist:
     regulatory strategies.
   verbose: true
   allow_delegation: false
+  llm: gemini/gemini-2.5-flash-lite
