@@ -113,17 +113,28 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
     @router(run_intake_and_triage)
     def evaluation_gate(self):
         """Evaluates the 3 Compliance Pillars and directs the processing route."""
-        if self.state.is_sufficiently_narrow:
-            print("[Router] Query is sufficiently narrow. Moving to Enforcement Step.")
+        # 3 pillars
+        pillars = [
+            self.state.role_extracted,
+            self.state.jurisdiction_extracted,
+            self.state.purpose_extracted
+        ]
+        pillar_count = sum(1 for p in pillars if p and str(
+            p).strip().lower() != "unknown")
+        # Happy case
+        if self.state.is_sufficiently_narrow or pillar_count >= 2:
+            print(
+                f"[Router] Sufficient compliance parameters met ({pillar_count}/3 pillars). Routing to Enforcer.")
             return "route_to_enforcer"
-
-        # Check against the Max Cap threshold from your workflow diagram
+        # Uncooperative user case
         if self.state.clarification_attempts >= 2:
             print(
-                "[Router] Loop cap breached (attempts >= 2). Forcing Hard Exit Reset.")
+                f"[Router] Max loop attempts breached ({self.state.clarification_attempts} >= 2). Directing to Hard Exit.")
             return "route_to_hard_exit"
 
-        print("[Router] Query is too vague. Moving to Clarification Loop Path.")
+        # tell me more
+        print(
+            f"[Router] Insufficient parameters ({pillar_count}/3 pillars). Directing to Clarification Loop Path.")
         return "route_to_clarification_loop"
 
     @listen("route_to_enforcer")
