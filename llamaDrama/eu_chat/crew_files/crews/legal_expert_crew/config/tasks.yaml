@@ -5,8 +5,10 @@ compliance_enforcement_task:
     You will only execute if 'is_sufficiently_narrow' was validated as true.
     
     If 'is_sufficiently_narrow' is true, execute the following processing cycle:
-    1. EXTRACT AND SEARCH: Read the 'generated_subqueries' array. Pass these strings directly into your 
-       vector search tools to pull relevant legal text chunks from the database.
+    1. EXTRACT AND SEARCH: Locate the complete 'generated_subqueries' array provided in the triage payload. 
+       Pass this entire array directly as the 'query' argument into the 'Knowledge Retrieval' tool in a 
+       single, execution step. Do not execute independent loops, and do not break the array apart. The tool 
+       natively processes the entire list at once and returns a structured dictionary of results.
     2. STATUTORY AUDIT: Assess each claim in 'agent_1_assumptions' against the retrieved text chunks. Verify 
        compliance thresholds, fines, exceptions, and risk tiers (Prohibited, High-Risk, Limited, Minimal).
     3. FILTER CLAIMS: Identify any assumptions that are legally inaccurate, misaligned with statutory definitions, 
@@ -15,7 +17,10 @@ compliance_enforcement_task:
     4. RESPOND WITH CONDITIONALS: If any compliance pillars were flagged as unknown or assumed, encapsulate 
        those segments of your analysis inside highly visible Markdown "IF/THEN" blocks.
     5. TAILOR THE OUTPUT: Synthesize the verified statutory requirements into a practical compliance roadmap 
-       formatted in clean Markdown. You MUST read the 'audience_profile' data passed from Task 1:
+       formatted in clean Markdown. You MUST trace and explicitly cite the exact Article numbers, Chapters, or 
+       Annex sections directly from the verified text chunks returned by your search tool. Do not summarize away the legal 
+       citations; every concrete obligation or checklist item must be visibly anchored to its official statutory location 
+       (e.g., 'According to Article 52(1)...'). You MUST read the 'audience_profile' data passed from Task 1:
        - If 'technical_tier' is Non-Technical, strip away software architecture jargon. Focus your 
          explanations on operational checklists, user-facing disclosure forms, and standard workplace policies.
        - If 'technical_tier' is Technical, frame the compliance obligations around data pipeline governance, 

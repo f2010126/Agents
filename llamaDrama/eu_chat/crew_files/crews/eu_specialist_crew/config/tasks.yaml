@@ -8,23 +8,27 @@ triage_and_strategy_task:
 
     1. TERMINATION CHECK: Read the variable {clarification_attempts}. If the value is equal to or greater than 2, and the incoming user input still fails to clarify the scenario, immediately force 'is_sufficiently_narrow' to false, bypass all subsequent parsing steps, set all schema fields to null, and populate 'clarification_question' with an explicit session error reset message.
 
-    1. PILLAR PARSING: If {clarification_attempts} is less than 2, Map the text to extract the three compliance vectors: Role (Provider, Deployer, Exempt), 
+    2. PILLAR PARSING: If {clarification_attempts} is less than 2, Map the text to extract the three compliance vectors: Role (Provider, Deployer, Exempt), 
        Jurisdiction (EU In-Scope, Implied, or specific non-EU target), and Purpose/Risk Tier (Prohibited, 
        High-Risk, Limited, Minimal).
-    2. NARROWNESS EVALUATION GATE: Determine if the query is clear enough to process without user friction. 
-       - If the user's question is conceptually specific and targetable (e.g., asking directly about 
-         statutory AI definitions, non-profit status, third-party tool liability, or specific risk thresholds), 
-         it is ALREADY sufficiently narrow. Mark 'is_sufficiently_narrow' as true. Do not generate an unnecessary question.
-       - If the input is fundamentally vague (e.g., "I am a UI developer", "tell me about compliance"), 
-         mark 'is_sufficiently_narrow' as false.
-    3. THE ASK PROTOCOL (Conditional): If and only if 'is_sufficiently_narrow' is false, generate a 
+    3. NARROWNESS EVALUATION GATE: Determine if the query is clear enough to process without user friction. 
+       - Count the extracted pillars. If COUNT >= 1 and the user has asked a concrete, targetable regulatory question 
+         (e.g., asking about liability, non-profit rules, algorithm classifications, or specific risk markers), 
+         the query is SUFFICIENTLY NARROW. Mark 'is_sufficiently_narrow' as true. 
+       - If COUNT == 2, do not hold back execution. Mark 'is_sufficiently_narrow' as true so Agent 2 can build the 
+         required conditional compliance map using IF/THEN blocks for the missing factor.
+       - If COUNT <= 1 and the core question itself is fundamentally missing or completely un-targetable 
+         (e.g., "I am a developer", "tell me about compliance"), mark 'is_sufficiently_narrow' as false.    4. THE ASK PROTOCOL (Conditional): If and only if 'is_sufficiently_narrow' is false, generate a 
        hyper-targeted, professional clarification question (max 1-2 questions) bound tightly to the missing pillars. 
        Do not use generic text. If the user is uncooperative or vague and the clarification_attempts count equals 
        or exceeds 2, trigger a session error reset message.
-    4. SUBQUERY TRANSLATION: If the gate passes, translate the user's real scenario into an array of 3-5 
-       standalone, search-optimized regulatory jargon strings targeting explicit legal sections (e.g., 
-       "EU AI Act Article 25 provider obligations third party code generation").
-    5. HYPOTHESIS TRACKING: Outline your internal reasoning ("Assumptions") documenting exactly why those 
+    4. SUBQUERY TRANSLATION: If the gate passes ('is_sufficiently_narrow' is true), translate the user's scenario 
+       into an array of 3-5 standalone, dense search-optimized legal keywords and concepts. 
+       - Cross-reference the query against the real list of available titles from your database manifest tool.
+       - DO NOT invent, assume, or guess specific statutory Section or Article numbers (e.g., do not guess 'Article 25'). 
+       - Focus purely on semantic, regulatory concepts, core definitions, obligations, and the targeted jurisdiction 
+         (e.g., instead of guessing articles, use: "EU AI Act provider obligations third party tool liability code generation").
+    6. HYPOTHESIS TRACKING: Outline your internal reasoning ("Assumptions") documenting exactly why those 
        subqueries were constructed to map the user's issue.
   expected_output: >
     A strictly structured JSON string matching this schema:
