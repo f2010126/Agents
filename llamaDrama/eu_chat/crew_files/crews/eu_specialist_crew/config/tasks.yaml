@@ -18,11 +18,12 @@ triage_and_strategy_task:
        - If COUNT == 2, do not hold back execution. Mark 'is_sufficiently_narrow' as true so Agent 2 can build the 
          required conditional compliance map using IF/THEN blocks for the missing factor.
        - If COUNT <= 1 and the core question itself is fundamentally missing or completely un-targetable 
-         (e.g., "I am a developer", "tell me about compliance"), mark 'is_sufficiently_narrow' as false.    4. THE ASK PROTOCOL (Conditional): If and only if 'is_sufficiently_narrow' is false, generate a 
+         (e.g., "I am a developer", "tell me about compliance"), mark 'is_sufficiently_narrow' as false.    
+    4. THE ASK PROTOCOL (Conditional): If and only if 'is_sufficiently_narrow' is false, generate a 
        hyper-targeted, professional clarification question (max 1-2 questions) bound tightly to the missing pillars. 
        Do not use generic text. If the user is uncooperative or vague and the clarification_attempts count equals 
        or exceeds 2, trigger a session error reset message.
-    4. SUBQUERY TRANSLATION: If the gate passes ('is_sufficiently_narrow' is true), translate the user's scenario 
+    5. SUBQUERY TRANSLATION: If the gate passes ('is_sufficiently_narrow' is true), translate the user's scenario 
        into an array of 3-5 standalone, dense search-optimized legal keywords and concepts. 
        - Cross-reference the query against the real list of available titles from your database manifest tool.
        - DO NOT invent, assume, or guess specific statutory Section or Article numbers (e.g., do not guess 'Article 25'). 
