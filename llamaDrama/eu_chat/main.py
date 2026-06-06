@@ -60,36 +60,48 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
 
         # CrewAI populates .raw or parsing can read raw string data
         try:
-            raw_output = response.raw
-            # Handle standard CrewAI string wrapping if output_json didn't natively parse
-            if isinstance(raw_output, str):
-                # Strip markdown code blocks if the LLM injected them into raw text
-                clean_json = raw_output.replace(
-                    "```json", "").replace("```", "").strip()
-                data = json.loads(clean_json)
+            if response.pydantic:
+                data = response.pydantic
+                self.state.is_sufficiently_narrow = data.is_sufficiently_narrow
+                self.state.clarification_question = data.clarification_question
+                self.state.role_extracted = data.role_extracted
+                self.state.jurisdiction_extracted = data.jurisdiction_extracted
+                self.state.purpose_extracted = data.purpose_extracted
+
+                if data.audience_profile:
+                    self.state.technical_tier = data.audience_profile.technical_tier
+                    self.state.organizational_role = data.audience_profile.organizational_role
+                    self.state.primary_compliance_focus = data.audience_profile.primary_compliance_focus
+
+                self.state.generated_subqueries = data.generated_subqueries
+                self.state.agent_1_assumptions = data.agent_1_assumptions
+
             else:
-                data = raw_output
+                # fallback:Crew AI populates.
+                data_dict = response.json_dict if hasattr(
+                    response, "json_dict") else json.loads(response.raw)
 
-            # Commit Agent 1 data structures directly to flow state variables
-            self.state.is_sufficiently_narrow = data.get(
-                "is_sufficiently_narrow", False)
-            self.state.clarification_question = data.get(
-                "clarification_question")
-            self.state.role_extracted = data.get("role_extracted")
-            self.state.jurisdiction_extracted = data.get(
-                "jurisdiction_extracted")
-            self.state.purpose_extracted = data.get("purpose_extracted")
+                self.state.is_sufficiently_narrow = data_dict.get(
+                    "is_sufficiently_narrow", False)
+                self.state.clarification_question = data_dict.get(
+                    "clarification_question")
+                self.state.role_extracted = data_dict.get("role_extracted")
+                self.state.jurisdiction_extracted = data_dict.get(
+                    "jurisdiction_extracted")
+                self.state.purpose_extracted = data_dict.get(
+                    "purpose_extracted")
 
-            profile = data.get("audience_profile", {}) or {}
-            self.state.technical_tier = profile.get("technical_tier")
-            self.state.organizational_role = profile.get("organizational_role")
-            self.state.primary_compliance_focus = profile.get(
-                "primary_compliance_focus")
+                profile = data_dict.get("audience_profile", {}) or {}
+                self.state.technical_tier = profile.get("technical_tier")
+                self.state.organizational_role = profile.get(
+                    "organizational_role")
+                self.state.primary_compliance_focus = profile.get(
+                    "primary_compliance_focus")
 
-            self.state.generated_subqueries = data.get(
-                "generated_subqueries", [])
-            self.state.agent_1_assumptions = data.get(
-                "agent_1_assumptions", [])
+                self.state.generated_subqueries = data_dict.get(
+                    "generated_subqueries", [])
+                self.state.agent_1_assumptions = data_dict.get(
+                    "agent_1_assumptions", [])
 
         except Exception as e:
             print(f"[Error] Failed parsing Agent 1 JSON payload: {e}")
