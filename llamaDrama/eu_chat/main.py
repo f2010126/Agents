@@ -104,11 +104,21 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
                     "agent_1_assumptions", [])
 
         except Exception as e:
+            # This should catch System errors not Human ones
             print(f"[Error] Failed parsing Agent 1 JSON payload: {e}")
             # Safe defensive fallback: assume un-narrowed text to trigger a safe ask retry
             self.state.is_sufficiently_narrow = False
+            # reset the state
+            self.state.role_extracted = None
+            self.state.jurisdiction_extracted = None
+            self.state.purpose_extracted = None
+            self.state.generated_subqueries = []
+            self.state.agent_1_assumptions = []
             # This is a safe guard. SO in normal cases the code should NEVER come here
-            self.state.clarification_question = "Could you clarify your user role and AI application intent?"
+            self.state.clarification_question = (
+                "I encountered a temporary formatting error while analyzing your profile. "
+                "Could you restate your role, jurisdiction, and the purpose of your AI system clearly?"
+            )
 
     @router(run_intake_and_triage)
     def evaluation_gate(self):
@@ -156,18 +166,17 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
         })
 
         try:
-            raw_output = response.raw
-            if isinstance(raw_output, str):
-                clean_json = raw_output.replace(
-                    "```json", "").replace("```", "").strip()
-                data = json.loads(clean_json)
+            if response.pydantic:
+                self.state.final_compliance_answer = response.pydantic.final_compliance_answer
+                self.state.discarded_assumptions = response.pydantic.discarded_assumptions
             else:
-                data = raw_output
+                data_dict = response.json_dict if hasattr(
+                    response, "json_dict") else json.loads(response.raw)
+                self.state.final_compliance_answer = data_dict.get(
+                    "final_compliance_answer", "")
+                self.state.discarded_assumptions = data_dict.get(
+                    "discarded_assumptions", [])
 
-            self.state.final_compliance_answer = data.get(
-                "final_compliance_answer", "")
-            self.state.discarded_assumptions = data.get(
-                "discarded_assumptions", [])
         except Exception as e:
             print(f"[Error] Failed parsing Agent 2 JSON payload: {e}")
             self.state.final_compliance_answer = "Error generating finalized legal compliance map."
