@@ -67,5 +67,7 @@ class TriageCrew():
         return Crew(
             agents=self.agents,  # get all agents
             tasks=self.tasks,   # get all tasks
-            process=Process.sequential  # do i really have a choice?
+            process=Process.sequential,  # do i really have a choice?
+            tracing=True,
+            verbose=True
         )

@@ -15,4 +15,4 @@ compliance_enforcer:
     only verified, concrete obligations checklists adjusted to the user's specific business or technical vocabulary.
   verbose: true
   allow_delegation: false
-  llm: gemini/gemini-2.5-flash-lite
+  llm: google/gemini-2.5-flash-lite
