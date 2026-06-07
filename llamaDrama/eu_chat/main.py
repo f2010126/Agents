@@ -8,8 +8,14 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from crewai.flow.flow import Flow, start, listen, router
 
-from crew_files.crews.eu_specialist_crew.intake_triage_crew import TriageCrew
-from crew_files.crews.legal_expert_crew.compliance_crew import EnforcementCrew
+from llamaDrama.eu_chat.crew_files.crews.eu_specialist_crew.intake_triage_crew import TriageCrew
+from llamaDrama.eu_chat.crew_files.crews.legal_expert_crew.compliance_crew import EnforcementCrew
+
+# init what models llamaindex needs to use
+from llamaDrama.eu_chat.init_llms import init_models
+
+init_models()
+
 # What Agent 1 needs send along to Agent 2
 
 

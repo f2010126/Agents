@@ -1,10 +1,11 @@
+# Crew Definition for my Enforcer and Compliance Agent
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from pydantic import BaseModel, Field
 from typing import List
 
 # tools
-from oss.tools import RetrievalTool
+from llamaDrama.eu_chat.oss.tools import RetrievalTool
 
 # output schema
 
@@ -50,7 +51,7 @@ class EnforcementCrew():
     def crew(self) -> Crew:
         """Creates the isolated Enforcement Crew"""
         return Crew(
-            agents=self.agents(),
-            tasks=self.tasks(),
+            agents=self.agents,
+            tasks=self.tasks,
             process=Process.sequential
         )

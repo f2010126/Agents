@@ -1,10 +1,11 @@
+# Crew Definition for my Initial Triage Agent
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from crewai_tools import SerperDevTool
 
-from oss.tools import list_doc_tool
+from llamaDrama.eu_chat.oss.tools import list_doc_tool
 # Dict structures
 
 
@@ -64,7 +65,7 @@ class TriageCrew():
     def crew(self) -> Crew:
         """Creates the isolated Triage Crew"""
         return Crew(
-            agents=self.agents(),  # get all agents
-            tasks=self.tasks(),   # get all tasks
+            agents=self.agents,  # get all agents
+            tasks=self.tasks,   # get all tasks
             process=Process.sequential  # do i really have a choice?
         )

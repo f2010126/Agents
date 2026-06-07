@@ -178,7 +178,7 @@ class RetrievalTool(BaseTool):
     - strict: only EU AI Act content
     """
 
-    args_schema = RetrievalInput
+    args_schema: type[BaseModel] = RetrievalInput
 
     def _run(self, query: Union[str, List[str]], mode: str = "broad", top_k: int = 5):
         return retrieval_tool(query=query, mode=mode, top_k=top_k)
