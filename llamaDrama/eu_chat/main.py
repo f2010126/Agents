@@ -63,6 +63,8 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
             "user_input": self.state.user_input,
             "clarification_attempts": self.state.clarification_attempts
         })
+        print("------AGENT 1 RAW RESPONSE:----------")
+        print(response.raw)
 
         # CrewAI populates .raw or parsing can read raw string data
         try:
@@ -161,6 +163,8 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
         # Instantiate and invoke the isolated Agent 2 Crew
         enforcer_crew_instance = EnforcementCrew().crew()
         response = enforcer_crew_instance.kickoff(inputs={
+            # doesnt really need this. will have to adjust later
+            "is_sufficiently_narrow": self.state.is_sufficiently_narrow,
             "generated_subqueries": self.state.generated_subqueries,
             "agent_1_assumptions": self.state.agent_1_assumptions,
             "technical_tier": self.state.technical_tier,
@@ -170,24 +174,38 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
             "jurisdiction_extracted": self.state.jurisdiction_extracted,
             "purpose_extracted": self.state.purpose_extracted
         })
+        print("------RAW RESPONSE:----------")
+        print(response.raw)
 
         try:
             if response.pydantic:
                 self.state.final_compliance_answer = response.pydantic.final_compliance_answer
                 self.state.discarded_assumptions = response.pydantic.discarded_assumptions
             else:
-                data_dict = response.json_dict if hasattr(
-                    response, "json_dict") else json.loads(response.raw)
-                self.state.final_compliance_answer = data_dict.get(
-                    "final_compliance_answer", "")
-                self.state.discarded_assumptions = data_dict.get(
-                    "discarded_assumptions", [])
+                # looking to see if that outpput was created by the Agent.
+                if isinstance(getattr(response, "json_dict", None), dict):
+                    data_dict = response.json_dict
+                else:
+                    try:
+                        # attempt to parse the output
+                        data_dict = json.loads(response.raw)
+                    except (json.JSONDecodeError, TypeError):
+                        # happens for Markdown text so collect it
+                        data_dict = {
+                            "final_compliance_answer": response.raw,
+                            "discarded_assumptions": []
+                        }
 
         except Exception as e:
             print(f"[Error] Failed parsing Agent 2 JSON payload: {e}")
+            data_dict = {
+                'final_compliance_answer': "Error generating finalized legal compliance map.",
+                "discarded_assumptions": []
+            }
             self.state.final_compliance_answer = "Error generating finalized legal compliance map."
 
         print("[Flow] Compliance Roadmap generated successfully. Ending pipeline.")
+        self.state.final_compliance_answer = data_dict['final_compliance_answer']
         return self.state.final_compliance_answer
 
     @listen("route_to_clarification_loop")

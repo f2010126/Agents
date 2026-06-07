@@ -3,7 +3,7 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from pydantic import BaseModel, Field
 from typing import List
-
+from crewai.agents.agent_builder.base_agent import BaseAgent
 # tools
 from llamaDrama.eu_chat.oss.tools import RetrievalTool
 
@@ -25,8 +25,10 @@ class EnforcementCrew():
     """Crew for handling Regulatory Compliance Verification, Auditing, and Final Output Generation"""
 
     # Points to your config folders where the YAMLs live
-    agents_config = 'config/agents.yaml'
-    tasks_config = 'config/tasks.yaml'
+    # agents_config = 'config/agents.yaml'
+    # tasks_config = 'config/tasks.yaml'
+    agents: list[BaseAgent]
+    tasks: list[Task]
 
     @agent
     def compliance_enforcer(self) -> Agent:

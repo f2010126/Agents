@@ -4,7 +4,7 @@ from crewai.project import CrewBase, agent, crew, task
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from crewai_tools import SerperDevTool
-
+from crewai.agents.agent_builder.base_agent import BaseAgent
 from llamaDrama.eu_chat.oss.tools import list_doc_tool
 # Dict structures
 
@@ -41,8 +41,10 @@ class TriageCrew():
     """Crew for handling the Intake, Triage, and Search Strategy formulation"""
 
     # Points to your config folders where the YAMLs live
-    agents_config = 'config/agents.yaml'
-    tasks_config = 'config/tasks.yaml'
+    # agents_config = 'config/agents.yaml'
+    # tasks_config = 'config/tasks.yaml'
+    agents: list[BaseAgent]
+    tasks: list[Task]
 
     @agent
     def intake_triage_specialist(self) -> Agent:
