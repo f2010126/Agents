@@ -3,7 +3,7 @@
 # 2. Websearch
 # 3. Retrieve from vector DB
 from qdrant_client import QdrantClient
-from constants import MODEL, GOOGLE_API_KEY, COLLECTION
+from oss.constants import MODEL, GOOGLE_API_KEY, COLLECTION
 from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core import VectorStoreIndex

@@ -6,3 +6,10 @@ first_agent/my_agent/__pycache__
 streaming_agent/app/.env
 */.env
 */*/.env
+*/*/**/__init__.cpython-313.pyc
+*/*/*/__pycache__
+llamaDrama/eu_chat/oss/.env
+*/*/.DS_Store
+*/*/*/*/.DS_Store
+*/*/*/*/*/__pycache__
+.DS_Store
