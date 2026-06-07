@@ -3,13 +3,20 @@
 # 2. Websearch
 # 3. Retrieve from vector DB
 from qdrant_client import QdrantClient
-from oss.constants import MODEL, GOOGLE_API_KEY, COLLECTION
+# my constants. WIll vary with provider
+from oss.constants import COLLECTION, llm, embed_model
 from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core import VectorStoreIndex
 from crewai.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 from typing import List, Union
+from llama_index.core import Settings
+
+# the llm and embeddings are declared already
+Settings.llm = llm
+Settings.embed_model = embed_model
+
 client = QdrantClient(host="localhost", port=6333)
 
 

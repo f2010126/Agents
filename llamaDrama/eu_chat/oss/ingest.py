@@ -1,31 +1,23 @@
 # Ingestion Pipeline
-from llama_index.llms.gemini import Gemini
-from llama_index.embeddings.gemini import GeminiEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client.models import VectorParams, Distance, PayloadSchemaType
-from llama_index.core import VectorStoreIndex, StorageContext, Document, Settings
-from llama_index.core.ingestion import IngestionPipeline, IngestionCache
+from llama_index.core import VectorStoreIndex, Document, Settings
+from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.schema import TransformComponent
 from qdrant_client import QdrantClient
 from pathlib import Path
 
 from pdf_parsing import parselite_folder, StableNodeID
-from constants import MODEL, GOOGLE_API_KEY, COLLECTION
+# my constants. WIll vary with provider
+from constants import COLLECTION, llm, embed_model
 
 
 BASE_DIR = Path(__file__).resolve().parent
 DOCS_DIR = BASE_DIR / "docs"
 
-Settings.llm = Gemini(
-    model_name=MODEL,
-    api_key=GOOGLE_API_KEY
-)
-
-Settings.embed_model = GeminiEmbedding(
-    model_name="gemini-embedding-001",
-    api_key=GOOGLE_API_KEY
-)
+Settings.llm = llm
+Settings.embed_model = embed_model
 
 client = QdrantClient(host="localhost", port=6333)
 
