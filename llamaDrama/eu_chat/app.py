@@ -1,23 +1,14 @@
-from llama_index.llms.gemini import Gemini
-from llama_index.embeddings.gemini import GeminiEmbedding
+# Just a simple retrieval
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from llama_index.core import VectorStoreIndex, StorageContext, Settings
+from llama_index.core import VectorStoreIndex, Settings
 from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
 from llama_index.core.query_engine import RetrieverQueryEngine
 
 from qdrant_client import QdrantClient
-from oss.constants import MODEL, GOOGLE_API_KEY, COLLECTION
+from llamaDrama.eu_chat.init_llms import init_models
+from llamaDrama.eu_chat.constants import COLLECTION
 
-Settings.llm = Gemini(
-    model_name=MODEL,
-    api_key=GOOGLE_API_KEY
-)
-
-Settings.embed_model = GeminiEmbedding(
-    model_name="gemini-embedding-001",
-    api_key=GOOGLE_API_KEY
-)
-
+init_models()
 client = QdrantClient(host="localhost", port=6333)
 
 

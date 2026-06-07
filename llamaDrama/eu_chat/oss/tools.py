@@ -4,18 +4,19 @@
 # 3. Retrieve from vector DB
 from qdrant_client import QdrantClient
 # my constants. WIll vary with provider
-from oss.constants import COLLECTION, llm, embed_model
+from llamaDrama.eu_chat.constants import COLLECTION
 from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core import VectorStoreIndex
 from crewai.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 from typing import List, Union
-from llama_index.core import Settings
 
-# the llm and embeddings are declared already
-Settings.llm = llm
-Settings.embed_model = embed_model
+# init what models llamaindex needs to use
+from llamaDrama.eu_chat.init_llms import init_models
+
+init_models()
+
 
 client = QdrantClient(host="localhost", port=6333)
 

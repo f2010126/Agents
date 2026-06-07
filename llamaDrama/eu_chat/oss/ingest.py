@@ -10,14 +10,14 @@ from pathlib import Path
 
 from pdf_parsing import parselite_folder, StableNodeID
 # my constants. WIll vary with provider
-from constants import COLLECTION, llm, embed_model
+from llamaDrama.eu_chat.constants import COLLECTION
+# init what models llamaindex needs to use
+from llamaDrama.eu_chat.init_llms import init_models
 
+init_models()
 
 BASE_DIR = Path(__file__).resolve().parent
 DOCS_DIR = BASE_DIR / "docs"
-
-Settings.llm = llm
-Settings.embed_model = embed_model
 
 client = QdrantClient(host="localhost", port=6333)
 
