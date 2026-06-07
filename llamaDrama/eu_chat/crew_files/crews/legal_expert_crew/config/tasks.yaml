@@ -37,10 +37,15 @@ compliance_enforcement_task:
        Match the tone specifically to the 'organizational_role' (e.g., an individual teacher needs guidance on 
        safe daily software use, whereas a CEO or Product Owner needs high-level liability overviews, organizational risk 
        registers, and corporate governance actions).
+
+        At the conclusion of your document, add a separate divider ('---') 
+        followed by a clear list titled '### Discarded Assumptions:' 
+        stating any initial ideas that were legally incorrect.
+
+        OUTPUT EXECUTION CONSTRAINT:
+        Your output must skip all contextual analysis intros. 
+        The very first character of your output response must be the '#' symbol starting the document header.
   expected_output: >
-    A strictly structured JSON string matching this schema:
-    {
-      "final_compliance_answer": "string",
-      "discarded_assumptions": ["string1", "string2"]
-    }
+    A clean, production-grade legal roadmap that begins directly with the title banner '# EU AI Act Compliance Roadmap', 
+    completely removing conversational intros, summaries of user input, or intermediate audit explanations.
   agent: compliance_enforcer

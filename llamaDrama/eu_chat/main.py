@@ -178,34 +178,16 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
         print(response.raw)
 
         try:
-            if response.pydantic:
-                self.state.final_compliance_answer = response.pydantic.final_compliance_answer
-                self.state.discarded_assumptions = response.pydantic.discarded_assumptions
-            else:
-                # looking to see if that outpput was created by the Agent.
-                if isinstance(getattr(response, "json_dict", None), dict):
-                    data_dict = response.json_dict
-                else:
-                    try:
-                        # attempt to parse the output
-                        data_dict = json.loads(response.raw)
-                    except (json.JSONDecodeError, TypeError):
-                        # happens for Markdown text so collect it
-                        data_dict = {
-                            "final_compliance_answer": response.raw,
-                            "discarded_assumptions": []
-                        }
+            # response is already in Markdown
+            self.state.final_compliance_answer = response.raw
+            self.state.discarded_assumptions = []
 
         except Exception as e:
-            print(f"[Error] Failed parsing Agent 2 JSON payload: {e}")
-            data_dict = {
-                'final_compliance_answer': "Error generating finalized legal compliance map.",
-                "discarded_assumptions": []
-            }
-            self.state.final_compliance_answer = "Error generating finalized legal compliance map."
+            print(f"[Error] Critical state tracking failure: {e}")
+            self.state.final_compliance_answer = response.raw if response else "Execution dropped completely."
+            self.state.discarded_assumptions = []
 
         print("[Flow] Compliance Roadmap generated successfully. Ending pipeline.")
-        self.state.final_compliance_answer = data_dict['final_compliance_answer']
         return self.state.final_compliance_answer
 
     @listen("route_to_clarification_loop")
