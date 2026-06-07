@@ -21,4 +21,4 @@ intake_triage_specialist:
     rigid, search-ready semantic regulatory strategies matching these available sources.
   verbose: true
   allow_delegation: false
-  llm: gemini/gemini-2.5-flash-lite
+  llm: google/gemini-2.5-flash-lite

@@ -53,5 +53,7 @@ class EnforcementCrew():
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
-            process=Process.sequential
+            process=Process.sequential,
+            verbose=True,
+            tracing=True
         )
