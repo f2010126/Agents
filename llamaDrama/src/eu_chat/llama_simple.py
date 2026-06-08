@@ -3,8 +3,10 @@ from llama_index.embeddings.gemini import GeminiEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
 from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.vector_stores.qdrant import QdrantVectorStore
 import os
 from pathlib import Path
+from qdrant_client import QdrantClient
 
 from llama_index.core import (
     VectorStoreIndex,
@@ -14,12 +16,11 @@ from llama_index.core import (
     load_index_from_storage,
     Settings,
 )
-from oss.data_cleaning import inspect_raw_documents, clean_text
-from oss.pdf_parsing import parselite_folder, inspect_chunks
+from llamaDrama.src.eu_chat.rag_ingestion.data_cleaning import inspect_raw_documents, clean_text
+from llamaDrama.src.eu_chat.rag_ingestion.pdf_parsing import parselite_folder, inspect_chunks
 
 # add your GOOGLE API key here
 MODEL = "models/gemini-2.5-flash"
-
 PERSIST_DIR = "./storage"
 BASE_DIR = Path(__file__).resolve().parent
 DOCS_DIR = BASE_DIR / "oss" / "docs"
@@ -198,6 +199,6 @@ def check_parsing():
 
 
 if __name__ == "__main__":
-    # load_all_docs()
+    load_all_docs()
     # simple_debug()
-    check_parsing()
+    # check_parsing()
