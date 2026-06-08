@@ -1,8 +1,8 @@
 import sys
 from unittest.mock import MagicMock, patch
-from main import EUAIActComplianceFlow, AIActComplianceState
-from crew_files.crews.eu_specialist_crew.intake_triage_crew import TriageOutputSchema, AudienceProfile
-from crew_files.crews.legal_expert_crew.compliance_crew import EnforcementOutputSchema
+from llamaDrama.src.eu_chat.main import EUAIActComplianceFlow, AIActComplianceState
+from llamaDrama.src.eu_chat.crew_files.crews.eu_specialist_crew.intake_triage_crew import TriageOutputSchema, AudienceProfile
+from llamaDrama.src.eu_chat.crew_files.crews.legal_expert_crew.compliance_crew import EnforcementOutputSchema
 
 
 def execute_mocked_dry_run():

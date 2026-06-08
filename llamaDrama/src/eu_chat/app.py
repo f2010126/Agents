@@ -5,8 +5,8 @@ from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
 from llama_index.core.query_engine import RetrieverQueryEngine
 
 from qdrant_client import QdrantClient
-from llamaDrama.eu_chat.init_llms import init_models
-from llamaDrama.eu_chat.constants import COLLECTION
+from llamaDrama.src.eu_chat.init_llms import init_models
+from llamaDrama.src.eu_chat.constants import COLLECTION
 
 init_models()
 client = QdrantClient(host="localhost", port=6333)
