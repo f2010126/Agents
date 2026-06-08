@@ -1,7 +1,7 @@
 # Main file, We have the conditional flow implemented here
 
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 import os
 import json
 from typing import List, Optional
@@ -10,7 +10,6 @@ from crewai.flow.flow import Flow, start, listen, router
 
 from llamaDrama.eu_chat.crew_files.crews.eu_specialist_crew.intake_triage_crew import TriageCrew
 from llamaDrama.eu_chat.crew_files.crews.legal_expert_crew.compliance_crew import EnforcementCrew
-
 # init what models llamaindex needs to use
 from llamaDrama.eu_chat.init_llms import init_models
 
@@ -63,8 +62,6 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
             "user_input": self.state.user_input,
             "clarification_attempts": self.state.clarification_attempts
         })
-        print("------AGENT 1 RAW RESPONSE:----------")
-        print(response.raw)
 
         # CrewAI populates .raw or parsing can read raw string data
         try:
@@ -174,8 +171,6 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
             "jurisdiction_extracted": self.state.jurisdiction_extracted,
             "purpose_extracted": self.state.purpose_extracted
         })
-        print("------RAW RESPONSE:----------")
-        print(response.raw)
 
         try:
             # response is already in Markdown

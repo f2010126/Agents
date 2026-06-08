@@ -20,9 +20,11 @@ compliance_enforcement_task:
        natively processes the entire list at once and returns a structured dictionary of results.
     2. STATUTORY AUDIT: Assess each claim in 'agent_1_assumptions' against the retrieved text chunks. Verify 
        compliance thresholds, fines, exceptions, and risk tiers (Prohibited, High-Risk, Limited, Minimal).
-    3. FILTER CLAIMS: Identify any assumptions that are legally inaccurate, misaligned with statutory definitions, 
-       or unsupported by the text. Place them into the 'discarded_assumptions' array and strip their logic 
-       completely from your final response generation.
+    3. FILTER CLAIMS AND LEGAL MYTHS: Evaluate the structural legal assumptions. 
+       - Identify any explicit legal theories that are false (e.g., assuming a non-profit tax status automatically overrides 
+       the provider scope of Article 3(3)). Place these rejected legal myths into the 'Discarded Assumptions' array at the bottom.
+       - CRITICAL: Do NOT discard or include the audience profile parameters (like 'technical_tier', 'organizational_role', 
+       or 'Developer') in the discarded list. Those are functional framing tools to help you write the report, not incorrect legal theories.
     4. RESPOND WITH CONDITIONALS: If any compliance pillars were flagged as unknown or assumed, encapsulate 
        those segments of your analysis inside highly visible Markdown "IF/THEN" blocks.
     5. TAILOR THE OUTPUT: Synthesize the verified statutory requirements into a practical compliance roadmap 
