@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import List
 from crewai.agents.agent_builder.base_agent import BaseAgent
 # tools
-from llamaDrama.eu_chat.oss.tools import RetrievalTool
+from llamaDrama.eu_chat.tools import RetrievalTool
 
 # output schema
 

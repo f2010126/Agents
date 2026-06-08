@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
-from oss.tools import list_doc_tool, retrieval_tool
+from llamaDrama.eu_chat.tools import list_doc_tool, retrieval_tool
 
 
 @patch("oss.tools.client")
