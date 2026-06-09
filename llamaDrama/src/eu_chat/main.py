@@ -234,27 +234,28 @@ def kickoff():
     """
     print("\n" + "="*60)
     print(" EU AI Act Regulatory Chatbot Active")
-    print("="*60)
 
     # Prompt the user interactively right at the start of the app
-    initial_prompt = input(
-        "\nPlease describe your AI system, target jurisdiction, and role:\n> ")
-    if not initial_prompt.strip():
-        print("[System Exit] Query cannot be empty.")
-        return
-    if initial_prompt.strip().lower() in ["exit", "quit", "stop"]:
-        print("End of the road. Goodbye.")
-        return
+    while True:
+        print("="*60)
+        initial_prompt = input(
+            "\nPlease describe your AI system, target jurisdiction, and role:\n> ")
+        if not initial_prompt.strip():
+            print("[System Exit] Query cannot be empty.")
+            return
+        if initial_prompt.strip().lower() in ["exit", "quit", "stop"]:
+            print("End of the road. Goodbye.")
+            return
 
-    # Instantiate the flow with the live user input
-    flow_execution = EUAIActComplianceFlow()
-    flow_execution.state.user_input = initial_prompt
-    flow_execution.state.clarification_attempts = 0
+        # Instantiate the flow with the live user input
+        flow_execution = EUAIActComplianceFlow()
+        flow_execution.state.user_input = initial_prompt
+        flow_execution.state.clarification_attempts = 0
 
-    output_result = flow_execution.kickoff()
+        output_result = flow_execution.kickoff()
 
-    print("\n" + "="*60 + "\nFINAL COMPLIANCE VERDICT:\n" + "="*60)
-    print(output_result)
+        print("\n" + "="*60 + "\nFINAL COMPLIANCE VERDICT:\n" + "="*60)
+        print(output_result)
 
 
 if __name__ == "__main__":
