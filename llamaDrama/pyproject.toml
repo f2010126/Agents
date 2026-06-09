@@ -4,13 +4,25 @@ version = "0.1.0"
 description = "EU AI Act Compliance Flow Engine"
 authors = [{name = "Dipti"}]
 dependencies = [
-    "crewai>=1.14.4",
-    "pydantic>=2.0.0"
+    "crewai",
+    "crewai-tools",
+    "pydantic",
+    "qdrant-client",
+    "llama-index",
+    "llama-index-vector-stores-postgres",
+    "llama-index-vector-stores-qdrant",
+    "llama-index-llms-gemini",
+    "llama-index-embeddings-gemini",
+    "fastembed",
+    "crewai[google-genai]"
 ]
 
 [project.scripts]
 # EXACT CHANGE: Instructs 'crewai run' to run kickoff inside src/eu_chat/main.py
-eu_chat = "eu_chat.main:kickoff"
+kickoff = "eu_chat.main:kickoff"
+
+[tool.uv]
+package = true
 
 [tool.crewai]
 type = "flow"

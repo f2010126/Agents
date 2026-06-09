@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import List
 from crewai.agents.agent_builder.base_agent import BaseAgent
 # tools
-from llamaDrama.src.eu_chat.tools import RetrievalTool
+from eu_chat.tools import RetrievalTool
 
 # output schema
 
@@ -56,6 +56,6 @@ class EnforcementCrew():
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
-            verbose=True,
+            verbose=False,
             tracing=True
         )

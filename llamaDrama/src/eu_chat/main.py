@@ -2,16 +2,15 @@
 
 from pydantic import BaseModel, Field
 from typing import List, Optional
-import os
 import json
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from crewai.flow.flow import Flow, start, listen, router
 
-from llamaDrama.src.eu_chat.crew_files.crews.eu_specialist_crew.intake_triage_crew import TriageCrew
-from llamaDrama.src.eu_chat.crew_files.crews.legal_expert_crew.compliance_crew import EnforcementCrew
+from eu_chat.crew_files.crews.eu_specialist_crew.intake_triage_crew import TriageCrew
+from eu_chat.crew_files.crews.legal_expert_crew.compliance_crew import EnforcementCrew
 # init what models llamaindex needs to use
-from llamaDrama.src.eu_chat.init_llms import init_models
+from eu_chat.init_llms import init_models
 
 init_models()
 
@@ -196,7 +195,12 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
         print("❓" * 30 + "\n")
 
         # wait for user input
-        user_response = input("Your Answer: \n> ")
+        user_response = input("Your Answer (or type 'exit' to quit): \n> ")
+        if user_response.strip().lower() in ["exit", "quit", "stop"]:
+            print(
+                "\n[Flow] User requested exit. Terminating flow session gracefully.")
+            self.state.final_compliance_answer = "Session terminated by user."
+            return self.state.final_compliance_answer
 
         # Structuring context explicitly so Agent 1 understands it's a multi-turn conversation
         self.state.user_input = (
@@ -216,7 +220,9 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
         print("[Flow] Pipeline shut down via Hard Exit execution.")
 
         # Ensure the error reset string populates the terminal field
-        self.state.final_compliance_answer = self.state.clarification_question
+        self.state.final_compliance_answer = (" End of the Road \n\n. "
+                                              "Reason: Insufficient context provided across multiple clarification attempts.\n"
+                                              f"For: {self.state.clarification_question}")
         return self.state.final_compliance_answer
 
 
@@ -227,7 +233,7 @@ def kickoff():
     Gathers the user's initial problem statement to boot the dynamic state.
     """
     print("\n" + "="*60)
-    print("🤖 EU AI Act Regulatory Compliance Chatbot Protocol Active")
+    print(" EU AI Act Regulatory Chatbot Active")
     print("="*60)
 
     # Prompt the user interactively right at the start of the app
@@ -235,6 +241,9 @@ def kickoff():
         "\nPlease describe your AI system, target jurisdiction, and role:\n> ")
     if not initial_prompt.strip():
         print("[System Exit] Query cannot be empty.")
+        return
+    if initial_prompt.strip().lower() in ["exit", "quit", "stop"]:
+        print("End of the road. Goodbye.")
         return
 
     # Instantiate the flow with the live user input

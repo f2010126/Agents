@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from crewai_tools import SerperDevTool
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from llamaDrama.src.eu_chat.tools import list_doc_tool
+from eu_chat.tools import list_doc_tool
 # Dict structures
 
 
@@ -71,5 +71,5 @@ class TriageCrew():
             tasks=self.tasks,   # get all tasks
             process=Process.sequential,  # do i really have a choice?
             tracing=True,
-            verbose=True
+            verbose=False
         )

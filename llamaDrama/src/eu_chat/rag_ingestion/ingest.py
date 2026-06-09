@@ -8,11 +8,11 @@ from llama_index.core.schema import TransformComponent
 from qdrant_client import QdrantClient
 from pathlib import Path
 
-from llamaDrama.src.eu_chat.rag_ingestion.pdf_parsing import parselite_folder, StableNodeID
+from eu_chat.rag_ingestion.pdf_parsing import parselite_folder, StableNodeID
 # my constants. WIll vary with provider
-from llamaDrama.src.eu_chat.constants import COLLECTION
+from eu_chat.constants import COLLECTION
 # init what models llamaindex needs to use
-from llamaDrama.src.eu_chat.init_llms import init_models
+from eu_chat.init_llms import init_models
 
 init_models()
 

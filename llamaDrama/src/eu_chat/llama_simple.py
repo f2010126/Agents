@@ -16,8 +16,8 @@ from llama_index.core import (
     load_index_from_storage,
     Settings,
 )
-from llamaDrama.src.eu_chat.rag_ingestion.data_cleaning import inspect_raw_documents, clean_text
-from llamaDrama.src.eu_chat.rag_ingestion.pdf_parsing import parselite_folder, inspect_chunks
+from eu_chat.rag_ingestion.data_cleaning import inspect_raw_documents, clean_text
+from eu_chat.rag_ingestion.pdf_parsing import parselite_folder, inspect_chunks
 
 # add your GOOGLE API key here
 MODEL = "models/gemini-2.5-flash"

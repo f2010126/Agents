@@ -4,7 +4,6 @@
 # 3. Retrieve from vector DB
 from qdrant_client import QdrantClient
 # my constants. WIll vary with provider
-from llamaDrama.src.eu_chat.constants import COLLECTION
 from llama_index.core.vector_stores import MetadataFilters, ExactMatchFilter
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core import VectorStoreIndex
@@ -13,7 +12,8 @@ from pydantic import BaseModel, Field
 from typing import List, Union
 
 # init what models llamaindex needs to use
-from llamaDrama.src.eu_chat.init_llms import init_models
+from eu_chat.init_llms import init_models
+from eu_chat.constants import COLLECTION
 
 init_models()
 

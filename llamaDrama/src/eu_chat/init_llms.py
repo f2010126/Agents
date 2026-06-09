@@ -3,7 +3,7 @@ from llama_index.core import Settings
 from llama_index.llms.gemini import Gemini
 from llama_index.embeddings.gemini import GeminiEmbedding
 import os
-from llamaDrama.src.eu_chat.constants import GOOGLE_API_KEY, MODEL
+from eu_chat.constants import GOOGLE_API_KEY, MODEL
 
 # also adding it to my os env.
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
