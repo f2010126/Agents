@@ -189,12 +189,26 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
     def process_clarification_turn(self):
         """Increments attempt counters and surfaces follow-up prompts to the UI loop."""
         self.state.clarification_attempts += 1
+        print("\n" + "❓" * 30)
         print(
-            f"[Flow] Surfacing question to UI. New Attempt Counter: {self.state.clarification_attempts}")
+            f"CLARIFICATION REQUIRED (Turn {self.state.clarification_attempts}/2):")
+        print(f"{self.state.clarification_question}")
+        print("❓" * 30 + "\n")
 
-        # Assign the question text directly as the execution return value
-        self.state.final_compliance_answer = self.state.clarification_question
-        return self.state.final_compliance_answer
+        # wait for user input
+        user_response = input("Your Answer: \n> ")
+
+        # Structuring context explicitly so Agent 1 understands it's a multi-turn conversation
+        self.state.user_input = (
+            f"Conversation History:\n"
+            f"- Original Query: {self.state.user_input}\n"
+            f"- Assistant Clarification Request: {self.state.clarification_question}\n"
+            f"- User Reply: {user_response}"
+        )
+        print(f"\n[Flow] Context appended to state. Re-routing back to Intake...")
+
+        # Re-trigger the kickoff loop internally
+        return self.kickoff()
 
     @listen("route_to_hard_exit")
     def process_hard_exit(self):
@@ -206,15 +220,44 @@ class EUAIActComplianceFlow(Flow[AIActComplianceState]):
         return self.state.final_compliance_answer
 
 
-if __name__ == "__main__":
-    # Test Scenario 1: Complex, narrow query (Should bypass clarification directly)
-    initial_prompt = "I am building a free app for a small charity to help homeless people find shelters in France. Does the EU AI Act apply to me, or are non-profits exempt since we aren't selling anything?"
+# Swicthing to commandline runs.
+def kickoff():
+    """
+    The entry point mapped to 'crewai run'.
+    Gathers the user's initial problem statement to boot the dynamic state.
+    """
+    print("\n" + "="*60)
+    print("🤖 EU AI Act Regulatory Compliance Chatbot Protocol Active")
+    print("="*60)
 
+    # Prompt the user interactively right at the start of the app
+    initial_prompt = input(
+        "\nPlease describe your AI system, target jurisdiction, and role:\n> ")
+    if not initial_prompt.strip():
+        print("[System Exit] Query cannot be empty.")
+        return
+
+    # Instantiate the flow with the live user input
     flow_execution = EUAIActComplianceFlow()
     flow_execution.state.user_input = initial_prompt
     flow_execution.state.clarification_attempts = 0
 
     output_result = flow_execution.kickoff()
 
-    print("\n" + "="*40 + "\nFINAL WORKFLOW OUTPUT:\n" + "="*40)
+    print("\n" + "="*60 + "\nFINAL COMPLIANCE VERDICT:\n" + "="*60)
     print(output_result)
+
+
+if __name__ == "__main__":
+    # Test Scenario 1: Complex, narrow query (Should bypass clarification directly)
+    # initial_prompt = "I am building a free app for a small charity to help homeless people find shelters in France. Does the EU AI Act apply to me, or are non-profits exempt since we aren't selling anything?"
+
+    # flow_execution = EUAIActComplianceFlow()
+    # flow_execution.state.user_input = initial_prompt
+    # flow_execution.state.clarification_attempts = 0
+
+    # output_result = flow_execution.kickoff()
+
+    # print("\n" + "="*40 + "\nFINAL WORKFLOW OUTPUT:\n" + "="*40)
+    # print(output_result)
+    kickoff()
