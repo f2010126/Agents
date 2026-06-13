@@ -9,6 +9,7 @@
 Architecture, data structure, and operational boundaries for a cost-optimized, two-agent EU AI Act regulatory compliance chatbot.
 
 # Workflow
+```
 [ Raw User Input ]
                │
                ▼
@@ -38,7 +39,7 @@ Architecture, data structure, and operational boundaries for a cost-optimized, t
                │ (Audits & Discards Assumptions)
                ▼
     [ Final Verified Output ]
-
+```
 
 # Agents
 ## Agent 1
