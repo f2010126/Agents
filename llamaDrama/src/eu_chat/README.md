@@ -1,8 +1,10 @@
 # EU-AI Chatbot
 
 ##### References
-https://developers.llamaindex.ai/python/examples/low_level/oss_ingestion_retrieval/
-https://docs.crewai.com/
+- https://developers.llamaindex.ai/python/examples/low_level/oss_ingestion_retrieval/
+- https://ai-act-service-desk.ec.europa.eu/en
+- https://docs.crewai.com/
+---
 # Expectation
 Architecture, data structure, and operational boundaries for a cost-optimized, two-agent EU AI Act regulatory compliance chatbot.
 
